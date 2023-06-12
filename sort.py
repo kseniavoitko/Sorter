@@ -35,17 +35,45 @@ def get_categories(file: Path) -> str:
 
 def sort_folder(path: Path) -> None:
     
+    category_files = {
+        'images': [],
+        'documents': [],
+        'audio': [],
+        'video': [],
+        'archives': [],
+        'other':[]
+    }
+
+
     for item in path.glob("**/*"):
         if item.is_file():
-            cat = get_categories(item)
-            move_file(item, path, cat)
+                cat = get_categories(item)
+                move_file(item, path, cat)
+                category_files[cat].append(item.name)
+
+    known_cat = [value for key, value in category_files.items() if key != 'other']
+    known_cat = sum(known_cat, [])
+    known_cat = [Path(value).suffix for value in known_cat]
+
+    unknown_cat = [value for key, value in category_files.items() if key == 'other']
+    unknown_cat = sum(unknown_cat, [])
+    unknown_cat = [Path(value).suffix for value in unknown_cat]
+
+    print('Files:')
+    for key, value in category_files.items():
+        if value:
+            print(key, '; '.join(set(value)))
+
+    print('Known category: ', ', '.join(set(known_cat)))
+    print('Unknown category: ', ', '.join(set(unknown_cat)))
         
 
 def delete_empty_folder(path: Path) -> None:
     
-    for item in path.glob("**/*"):
-        if item.is_dir() and not len(os.listdir(item._str)):
-            item.rmdir() 
+    folders_to_delete = [f for f in path.glob("**")]
+    for folder in folders_to_delete[::-1]:
+        if folder.is_dir() and not len(os.listdir(folder._str)):
+            folder.rmdir() 
 
 
 def unpack_archive(path: Path) -> None:
